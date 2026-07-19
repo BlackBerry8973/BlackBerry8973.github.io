@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Graphics Showcase</title>
+    
+    <!-- 1. ดึงฟอนต์สไตล์โมเดิร์น เรียบหรู (Space Grotesk และ Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- 2. ดึงไอคอนจาก Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 3. เชื่อมโยงไฟล์ตกแต่งหน้าตา (style.css) -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ==========================================
+         เมนูบาร์ด้านบน (Navigation Bar - สไตล์มินิมอลโมโนโทน)
+         ========================================== -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo"><span class="logo-accent">INTERACTIVE </span>COMPUTER GRAPHICS</a>
+            <nav class="nav-links">
+                <a href="#showcase">Interactive Demo</a>
+                <a href="#skills">Skills</a>
+                <a href="#project-source">Source File</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ==========================================
+         ส่วนแนะนำตัว (Hero Section - สไตล์โมโนโทนคลีน)
+         ========================================== -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <!-- ส่วนรูปภาพโปรไฟล์แมวดำ -->
+            <div class="hero-image-wrapper">
+                <img src="avatar.jpg" alt="Black Cat Profile Avatar" class="hero-avatar">
+                <div class="avatar-ring"></div>
+            </div>
+            
+            <!-- ข้อความแนะนำตัวภาษาอังกฤษ -->
+            <div class="hero-content">
+                <span class="hero-tag">System Ready</span>
+                <h1 class="hero-title">Hello, I'm <span class="text-highlight">Natthachai Rukleng</span></h1>
+                <p class="hero-subtitle">Interactive Computer Graphics Enthusiast</p>
+                <p class="hero-desc">
+                    Welcome to my minimalist portfolio showcasing a software-based rasterizer. Explore the interactive demo, learn about my technical skills, and access the original source file for hands-on experience.
+                </p>
+                <div class="hero-actions">
+                    <a href="#showcase" class="btn btn-primary">Try Demo <i class="fa-solid fa-play"></i></a>
+                    <!-- ปุ่มกดเปิดโค้ดดิบ 800_raster.html -->
+                    <a href="800_raster.html" target="_blank" class="btn btn-secondary">Open Code <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         ส่วนโชว์เคสโปรเจกต์ (Showcase Section)
+         * แสดงเดโมและการควมคุมวาดเส้น/หมุนขยายแมว *
+         ========================================== -->
+    <section id="showcase" class="section border-top">
+        <div class="container">
+            <h2 class="section-title"><span class="number-badge">01</span> Interactive Graphics</h2>
+            
+            <div class="showcase-container card-monotone">
+                <div class="showcase-header">
+                    <span class="showcase-badge"><i class="fa-solid fa-circle-nodes"></i> Software Rasterizer Demo</span>
+                    <h3 class="showcase-title">Pixel-Based Rendering Engine</h3>
+                </div>
+                
+                <div class="showcase-grid">
+                    <!-- แคนวาสแสดงผลการวาด -->
+                    <div class="canvas-wrapper">
+                        <canvas id="showcase-canvas" width="200" height="200"></canvas>
+                        
+                        <!-- แถบปุ่มควบคุมการทำงาน (Translate, Rotate, Scale) -->
+                        <div class="canvas-controls">
+                            <!-- ปุ่มการทำ Translation (เคลื่อนย้าย X, Y) -->
+                            <div class="control-group">
+                                <span class="control-label">Translate (Move):</span>
+                                <div class="btn-row">
+                                    <button id="btn-move-left" class="btn-control" title="Move Left"><i class="fa-solid fa-arrow-left"></i> L</button>
+                                    <button id="btn-move-right" class="btn-control" title="Move Right"><i class="fa-solid fa-arrow-right"></i> R</button>
+                                    <button id="btn-move-up" class="btn-control" title="Move Up"><i class="fa-solid fa-arrow-up"></i> U</button>
+                                    <button id="btn-move-down" class="btn-control" title="Move Down"><i class="fa-solid fa-arrow-down"></i> D</button>
+                                </div>
+                            </div>
+                            
+                            <!-- ปุ่มการทำ Rotation (หมุน) -->
+                            <div class="control-group">
+                                <span class="control-label">Rotate:</span>
+                                <div class="btn-row">
+                                    <button id="btn-rotate-left" class="btn-control" title="Rotate Left"><i class="fa-solid fa-arrow-rotate-left"></i> Left</button>
+                                    <button id="btn-rotate-right" class="btn-control" title="Rotate Right"><i class="fa-solid fa-arrow-rotate-right"></i> Right</button>
+                                </div>
+                            </div>
+                            
+                            <!-- ปุ่มการทำ Scaling (ย่อ-ขยาย) -->
+                            <div class="control-group">
+                                <span class="control-label">Scale:</span>
+                                <div class="btn-row">
+                                    <button id="btn-zoom-in" class="btn-control" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i> Zoom +</button>
+                                    <button id="btn-zoom-out" class="btn-control" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i> Zoom -</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ส่วนอธิบายข้อมูลทางเทคนิคภาษาอังกฤษ -->
+                    <div class="showcase-info">
+                        <h4>About The Project</h4>
+                        <p>
+                            This interactive demo showcases a software-based rasterizer that allows users to draw lines on a canvas and manipulate a 24-bit Cat sprite. The project demonstrates fundamental computer graphics concepts such as pixel manipulation, line drawing algorithms, and sprite transformations including translation, rotation, and scaling.
+                        </p>
+                        
+                        <div class="control-instructions card-instructions">
+                            <h5>💡 Keyboard Interaction:</h5>
+                            <ul>
+                                <li><strong>Translate (Move):</strong> Arrow Keys (Up / Down / Left / Right)</li>
+                                <li><strong>Rotate:</strong> Q Key (Counter-Clockwise) / E Key (Clockwise)</li>
+                                <li><strong>Scale (Zoom):</strong> + Key (Zoom In) / - Key (Zoom Out)</li>
+                                <li><strong>Draw:</strong> Drag your mouse over the canvas to draw black lines.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="file-reference">
+                            <p><i class="fa-regular fa-file-code"></i> Source Reference: <code>800_raster.html</code></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         ส่วนรายการทักษะกราฟิกและฟรอนต์เอนด์ (Skills Section)
+         ========================================== -->
+    <section id="skills" class="section border-top">
+        <div class="container">
+            <h2 class="section-title"><span class="number-badge">02</span> Technical Skills</h2>
+            <div class="skills-grid">
+                
+                <div class="skills-category card-monotone">
+                    <h3 class="category-title"><i class="fa-solid fa-code"></i> Frontend Web</h3>
+                    <div class="tags-container">
+                        <span class="tag">HTML</span>
+                        <span class="tag">CSS</span>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">Responsive Design</span>
+                    </div>
+                </div>
+                
+                <div class="skills-category card-monotone">
+                    <h3 class="category-title"><i class="fa-solid fa-cube"></i> Computer Graphics</h3>
+                    <div class="tags-container">
+                        <span class="tag">Rasterization</span>
+                        <span class="tag">Sprite Transformation</span>
+                        <span class="tag">Bresenham's Algorithm</span>
+                    </div>
+                </div>
+                
+                <div class="skills-category card-monotone">
+                    <h3 class="category-title"><i class="fa-solid fa-terminal"></i> Tools</h3>
+                    <div class="tags-container">
+                        <span class="tag">Git & GitHub</span>
+                        <span class="tag">VS Code</span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         ส่วนลิงก์เปิดไฟล์โปรเจกต์ดั้งเดิม (Project Source Section)
+         ========================================== -->
+    <section id="project-source" class="section border-top">
+        <div class="container">
+            <div class="contact-box card-monotone text-center">
+                <h2 class="section-title text-center" style="margin-bottom: 20px; justify-content: center;"><span class="number-badge">03</span> Source Code</h2>
+                <p class="contact-subtitle text-center">
+                    Click the button below to view the raw project file and explore the full computer graphics logic.
+                </p>
+                <!-- ปุ่มกดนำทางไปยังไฟล์ 800_raster.html ดั้งเดิม -->
+                <a href="800_raster.html" target="_blank" class="btn btn-primary" style="display: inline-flex; width: auto; margin-top: 10px;">
+                    Open 800_raster.html <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         ส่วนท้ายเว็บ (Footer)
+         ========================================== -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Natthachai Rukleng. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- ==========================================
+         โค้ดระบบเรนเดอร์พิกเซล (จาก 800_raster.html ดั้งเดิม)
+         ========================================== -->
+    <script>
+        const canvas = document.getElementById('showcase-canvas');
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.createImageData(canvas.width, canvas.height);
+        const pixels = imageData.data; // Array of color [R,G,B,A, R,G,B,A, ...]
+        
+        // ตัวแปรเก็บพิกัดตำแหน่ง (Translation), องศา (Rotation), สเกล (Scale) ของรูปแมว
+        let posX = 100;
+        let posY = 100;
+        let degree = 0;
+        let scale = 1.0;
+        
+        function putPixel(x, y, r, g, b, a = 255) {
+            if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
+            const idx = (y * canvas.width + x) * 4;
+            pixels[idx]     = r;
+            pixels[idx + 1] = g;
+            pixels[idx + 2] = b;
+            pixels[idx + 3] = a;
+        }
+        
+        function drawLine(x1, y1, x2, y2, r, g, b, a = 255) {
+            const dx = Math.abs(x2 - x1);
+            const dy = Math.abs(y2 - y1);
+            
+            if (dx > dy) {
+                const m = (y2 - y1) / (x2 - x1);
+                const c = y1 - m * x1;
+                for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
+                    const y = Math.round(m * x + c);
+                    putPixel(x, y, r, g, b, a);
+                }
+            } else {
+                const m = (x2 - x1) / (y2 - y1);
+                const c = x1 - m * y1;
+                for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+                    const x = Math.round(m * y + c);
+                    putPixel(x, y, r, g, b, a);
+                }
+            }
+        }
+        
+        function drawRectFilled(x1, y1, x2, y2, r, g, b, a = 255) {
+            for (let y = y1; y <= y2; y++) {
+                for (let x = x1; x <= x2; x++) {
+                    putPixel(x, y, r, g, b, a);
+                }
+            }
+        }
+        
+        function drawSprite24Bit(sprite, x, y, degree, scaleX, scaleY) {
+            const H = sprite.length;
+            if (H === 0) return;
+            const W = sprite[0].length;
+            
+            if (Math.abs(scaleX) < 0.01) scaleX = 0.01;
+            if (Math.abs(scaleY) < 0.01) scaleY = 0.01;
+            
+            const rad = degree * Math.PI / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+            
+            const corners = [
+                { cx: -W / 2, cy: -H / 2 },
+                { cx: W / 2, cy: -H / 2 },
+                { cx: W / 2, cy: H / 2 },
+                { cx: -W / 2, cy: H / 2 }
+            ];
+            
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            
+            for (const corner of corners) {
+                const rx = corner.cx * cos - corner.cy * sin;
+                const ry = corner.cx * sin + corner.cy * cos;
+                const dx = rx * scaleX;
+                const dy = ry * scaleY;
+                
+                if (dx < minX) minX = dx;
+                if (dx > maxX) maxX = dx;
+                if (dy < minY) minY = dy;
+                if (dy > maxY) maxY = dy;
+            }
+            
+            const startX = Math.floor(minX);
+            const endX = Math.ceil(maxX);
+            const startY = Math.floor(minY);
+            const endY = Math.ceil(maxY);
+            
+            for (let dy = startY; dy <= endY; dy++) {
+                for (let dx = startX; dx <= endX; dx++) {
+                    const rx = dx / scaleX;
+                    const ry = dy / scaleY;
+                    
+                    const cX = rx * cos + ry * sin;
+                    const cY = -rx * sin + ry * cos;
+                    
+                    const i = Math.floor(cX + W / 2);
+                    const j = Math.floor(cY + H / 2);
+                    
+                    if (i >= 0 && i < W && j >= 0 && j < H) {
+                        const color = sprite[j][i];
+                        if (color !== null && color !== undefined) {
+                            const r = (color >> 16) & 255;
+                            const g = (color >> 8) & 255;
+                            const b = color & 255;
+                            putPixel(Math.round(x + dx), Math.round(y + dy), r, g, b);
+                        }
+                    }
+                }
+            }
+        }
+        
+        const catSprite24bit = [
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, 0x000000, 0x000000, null, null, null, null, null, null, null, null, null, 0x000000, 0x000000, null, null],
+            [0x000000, 0xff007f, 0x00ffff, 0x000000, null, null, null, null, null, null, null, 0x000000, 0x00ffff, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0xff007f, 0x000000, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x000000, 0xff007f, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0x000000, 0x00ffff, 0x00ffff, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x00ffff, 0x00ffff, 0x000000, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0x000000, 0x000000, 0x00ffff, 0x000000, 0xff007f, 0x000000, 0xff007f, 0x000000, 0x000000, 0x00ffff, 0x000000, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0xff007f, 0x000000, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x000000, 0xff007f, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xffff00, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x000000, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+            [0x000000, 0xff007f, 0xffffff, 0xffffff, 0xff007f, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0xff007f, 0xffffff, 0xffffff, 0xff007f, 0x000000, null],
+            [null, 0x000000, 0xffffff, 0xffffff, 0xffffff, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xffffff, 0xffffff, 0xffffff, 0x000000, null, null],
+            [null, null, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, null, null, null],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+        ];
+        
+        function animate() {
+            // เคลียร์แคนวาสเป็นสีขาวเหมือนต้นฉบับ
+            drawRectFilled(0, 0, canvas.width - 1, canvas.height - 1, 255, 255, 255);
+            // วาดรูปแมว Nyan Cat ด้วยตำแหน่ง (posX, posY), มุมหมุน (degree), และสเกล (scale)
+            drawSprite24Bit(catSprite24bit, posX, posY, degree, scale, scale);
+            ctx.putImageData(imageData, 0, 0);
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // ระบบวาดพิกเซลด้วยการคลิกลากเมาส์
+        let isDragging = false;
+        let previousX = 0;
+        let previousY = 0;
+        
+        function toScaledMousePos(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: Math.floor((clientX - rect.left) * scaleX),
+                y: Math.floor((clientY - rect.top) * scaleY)
+            };
+        }
+        
+        canvas.addEventListener('mousedown', (event) => {
+            isDragging = true;
+            const { x, y } = toScaledMousePos(event.clientX, event.clientY);
+            previousX = x;
+            previousY = y;
+        });
+        
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        canvas.addEventListener('mousemove', (event) => {
+            if (!isDragging) return;
+            const { x, y } = toScaledMousePos(event.clientX, event.clientY);
+            
+            drawLine(previousX, previousY, x, y, 0, 0, 0);
+            putPixel(x, y, 0, 0, 0);
+            
+            previousX = x;
+            previousY = y;
+        });
+        
+        // ==========================================
+        // 1. ระบบควบคุมผ่านปุ่มกดหน้าจอ (Button Listeners)
+        // ==========================================
+        
+        // Translate (Move)
+        document.getElementById('btn-move-left').addEventListener('click', () => { posX -= 5; });
+        document.getElementById('btn-move-right').addEventListener('click', () => { posX += 5; });
+        document.getElementById('btn-move-up').addEventListener('click', () => { posY -= 5; });
+        document.getElementById('btn-move-down').addEventListener('click', () => { posY += 5; });
+        
+        // Rotate
+        document.getElementById('btn-rotate-left').addEventListener('click', () => { degree -= 15; });
+        document.getElementById('btn-rotate-right').addEventListener('click', () => { degree += 15; });
+        
+        // Scale
+        document.getElementById('btn-zoom-in').addEventListener('click', () => { scale = Math.min(3.0, scale + 0.15); });
+        document.getElementById('btn-zoom-out').addEventListener('click', () => { scale = Math.max(0.3, scale - 0.15); });
+
+        // ==========================================
+        // 2. ระบบควบคุมผ่านคีย์บอร์ดตามสั่ง (Keyboard Interaction)
+        // ==========================================
+        window.addEventListener('keydown', (event) => {
+            // ป้องกันบราว์เซอร์เลื่อนหน้าจอเวลาใช้ปุ่มลูกศร (Arrow Keys)
+            if(["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(event.code) > -1) {
+                event.preventDefault();
+            }
+            
+            switch(event.key) {
+                // Translation (Move)
+                case "ArrowLeft":
+                case "a":
+                case "A":
+                    posX -= 5;
+                    break;
+                case "ArrowRight":
+                case "d":
+                case "D":
+                    posX += 5;
+                    break;
+                case "ArrowUp":
+                case "w":
+                case "W":
+                    posY -= 5;
+                    break;
+                case "ArrowDown":
+                case "s":
+                case "S":
+                    posY += 5;
+                    break;
+                
+                // Rotation (Q = Counter-clockwise, E = Clockwise)
+                case "q":
+                case "Q":
+                    degree -= 15;
+                    break;
+                case "e":
+                case "E":
+                    degree += 15;
+                    break;
+                
+                // Scaling (Plus key = Zoom In, Minus key = Zoom Out)
+                case "+":
+                case "=":
+                    scale = Math.min(3.0, scale + 0.15);
+                    break;
+                case "-":
+                case "_":
+                    scale = Math.max(0.3, scale - 0.15);
+                    break;
+            }
+        });
+    </script>
+
+</body>
+</html>
