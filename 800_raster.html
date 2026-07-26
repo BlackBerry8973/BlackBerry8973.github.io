@@ -1,0 +1,359 @@
+<html>
+<head>
+<title>Raster Graphics</title>
+</head>
+<body>
+
+
+<canvas id="canvas" width="200" height="200"
+style="width:500px; height:500px; border:1px solid #000; image-rendering: pixelated;">
+</canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const imageData = ctx.createImageData(canvas.width, canvas.height);
+const pixels = imageData.data; // Array of color [R,G,B,A, R,G,B,A, ...]
+
+function putPixel(x, y, r, g, b, a = 255) {
+  const idx = (y * canvas.width + x) * 4; // หา index แรกของ pixel (x,y)
+  pixels[idx] = r;
+  pixels[idx + 1] = g;
+  pixels[idx + 2] = b;
+  pixels[idx + 3] = a;
+}
+function drawLine(x1, y1, x2, y2, r, g, b, a = 255) {
+  const dx = Math.abs(x2 - x1);
+  const dy = Math.abs(y2 - y1);
+
+  if(dx > dy) {
+    const m = (y2 - y1) / (x2 - x1);
+    const c = y1 - m * x1;
+    for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
+      const y = Math.round(m * x + c);
+      putPixel(x, y, r, g, b, a);
+    }
+  } else {
+    const m = (x2 - x1) / (y2 - y1);
+    const c = x1 - m * y1;
+    for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+      const x = Math.round(m * y + c);
+      putPixel(x, y, r, g, b, a);
+    }
+  }
+}
+function drawRect(x1, y1, x2, y2, r, g, b, a = 255) {
+  drawLine(x1, y1, x2, y1, r, g, b, a); // Top edge
+  drawLine(x2, y1, x2, y2, r, g, b, a); // Right edge
+  drawLine(x2, y2, x1, y2, r, g, b, a); // Bottom edge
+  drawLine(x1, y2, x1, y1, r, g, b, a); // Left edge
+}
+function drawRectFilled(x1, y1, x2, y2, r, g, b, a = 255) {
+  for (let y = y1; y <= y2; y++) {
+    for (let x = x1; x <= x2; x++) {
+      putPixel(x, y, r, g, b, a);
+    }
+  }
+}
+function drawRectGradient(x1, y1, x2, y2, r1, g1, b1, r2, g2, b2) {
+  for (let y = y1; y <= y2; y++) {
+    const t = (y - y1) / (y2 - y1);
+    const r = Math.round(r1 * (1 - t) + r2 * t);
+    const g = Math.round(g1 * (1 - t) + g2 * t);
+    const b = Math.round(b1 * (1 - t) + b2 * t);
+    for (let x = x1; x <= x2; x++) {
+      putPixel(x, y, r, g, b);
+    }
+  }
+}
+function drawEllipse(cx, cy, rx, ry, r, g, b, a = 255) {
+  for (let y = -ry; y <= ry; y++) {
+    for (let x = -rx; x <= rx; x++) {
+      if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1) {
+        putPixel(cx + x, cy + y, r, g, b, a);
+      }
+    }
+  }
+}
+function drawSprite(sprite, x, y, r, g, b, a = 255) {
+  for (let j = 0; j < sprite.length; j++) {
+    for (let i = 0; i < sprite[j].length; i++) {
+      if (sprite[j][i] === 1) {
+        putPixel(x + i, y + j, r, g, b, a);
+      }
+    }
+  }
+}
+function drawSpriteRotateScale(sprite, x, y, degree, scaleX, scaleY, r, g, b, a = 255) {
+  for (let j = 0; j < sprite.length; j++) {
+    for (let i = 0; i < sprite[j].length; i++) {
+      if (sprite[j][i] === 1) {
+        
+        // Center the pixel coordinates
+        const cX = i - (sprite[j].length / 2);
+        const cY = j - (sprite.length / 2);
+        // Rotate
+        const rad = degree * Math.PI / 180;
+        const x_rotated = Math.round(cX * Math.cos(rad) - cY * Math.sin(rad));
+        const y_rotated = Math.round(cX * Math.sin(rad) + cY * Math.cos(rad));
+
+        // Scale
+        const x_rotated_scaled = Math.round(x_rotated * scaleX);
+        const y_rotated_scaled = Math.round(y_rotated * scaleY);
+
+        //putPixel(x + x_rotated_scaled, y + y_rotated_scaled, r, g, b, a);
+        drawEllipse(x + x_rotated_scaled, y + y_rotated_scaled, Math.round(scaleX), Math.round(scaleY), r, g, b, a); // Draw a small ellipse instead of a pixel
+      }
+    }
+  }
+}
+function drawSprite24Bit(sprite, x, y, degree, scaleX, scaleY) {
+  const H = sprite.length;
+  if (H === 0) return;
+  const W = sprite[0].length;
+
+  // Prevent division by zero or extremely small scale rendering issues
+  if (Math.abs(scaleX) < 0.01) scaleX = 0.01;
+  if (Math.abs(scaleY) < 0.01) scaleY = 0.01;
+
+  const rad = degree * Math.PI / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  // Define 4 corners of the sprite in local coordinates relative to the center
+  const corners = [
+    { cx: -W / 2, cy: -H / 2 },
+    { cx: W / 2, cy: -H / 2 },
+    { cx: W / 2, cy: H / 2 },
+    { cx: -W / 2, cy: H / 2 }
+  ];
+
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+
+  for (const corner of corners) {
+    // Forward transformation to find bounding box in destination space
+    const rx = corner.cx * cos - corner.cy * sin;
+    const ry = corner.cx * sin + corner.cy * cos;
+    const dx = rx * scaleX;
+    const dy = ry * scaleY;
+
+    if (dx < minX) minX = dx;
+    if (dx > maxX) maxX = dx;
+    if (dy < minY) minY = dy;
+    if (dy > maxY) maxY = dy;
+  }
+
+  const startX = Math.floor(minX);
+  const endX = Math.ceil(maxX);
+  const startY = Math.floor(minY);
+  const endY = Math.ceil(maxY);
+
+  // Loop through destination bounding box and perform inverse mapping
+  for (let dy = startY; dy <= endY; dy++) {
+    for (let dx = startX; dx <= endX; dx++) {
+      // 1. Inverse scale
+      const rx = dx / scaleX;
+      const ry = dy / scaleY;
+
+      // 2. Inverse rotation (by -rad)
+      const cX = rx * cos + ry * sin;
+      const cY = -rx * sin + ry * cos;
+
+      // 3. Map to nearest neighbor sprite pixel index
+      const i = Math.floor(cX + W / 2);
+      const j = Math.floor(cY + H / 2);
+
+      if (i >= 0 && i < W && j >= 0 && j < H) {
+        const color = sprite[j][i];
+        if (color !== null && color !== undefined) {
+          const r = (color >> 16) & 255;
+          const g = (color >> 8) & 255;
+          const b = color & 255;
+          putPixel(Math.round(x + dx), Math.round(y + dy), r, g, b);
+        }
+      }
+    }
+  }
+}
+function toScaledMousePos(posX, posY) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: Math.floor((posX - rect.left) * scaleX),
+    y: Math.floor((posY - rect.top) * scaleY)
+  };
+}
+const spaceInvaderSprite = [
+    [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1],
+    [0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1],
+    [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+    [0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1],
+    [0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1],
+    [0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1],
+    [0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0],
+    [1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+];
+const SusSprite = [
+    [0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
+  ];
+const smileSprite = 
+   [
+    [0, 0, 1, 1, 1, 1, 0, 0],
+    [0, 1, 0, 0, 0, 0, 1, 0],
+    [1, 0, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 1, 1, 0, 0, 1],
+    [0, 1, 0, 0, 0, 0, 1, 0],
+    [0, 0, 1, 1, 1, 1, 0, 0],
+   ];
+
+const smileSprite24Bit = [
+  [null,       null,       0xB45309, 0xD97706, 0xD97706, 0xB45309, null,       null      ],
+  [null,       0xD97706,   0xFDE047, 0xFEF08A, 0xFEF08A, 0xFDE047, 0xD97706, null      ],
+  [0xB45309,   0xFDE047,   0x111827, 0xFDE047, 0xFDE047, 0x111827, 0xFDE047, 0xB45309  ],
+  [0xD97706,   0xFEF08A,   0x111827, 0xFEF08A, 0xFEF08A, 0x111827, 0xFEF08A, 0xD97706  ],
+  [0xD97706,   0xFDE047,   0xFDE047, 0xFDE047, 0xFDE047, 0xFDE047, 0xFDE047, 0xD97706  ],
+  [0xB45309,   0xFDE047,   0x111827, 0xFDE047, 0xFDE047, 0x111827, 0xFDE047, 0xB45309  ],
+  [null,       0xD97706,   0xFDE047, 0x111827, 0x111827, 0xFDE047, 0xD97706, null      ],
+  [null,       null,       0xB45309, 0xD97706, 0xD97706, 0xB45309, null,       null      ],
+];
+
+const catSprite24bit = [
+    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+    [null, 0x000000, 0x000000, null, null, null, null, null, null, null, null, null, 0x000000, 0x000000, null, null],
+    [0x000000, 0xff007f, 0x00ffff, 0x000000, null, null, null, null, null, null, null, 0x000000, 0x00ffff, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0xff007f, 0x000000, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x000000, 0xff007f, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0x000000, 0x00ffff, 0x00ffff, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x00ffff, 0x00ffff, 0x000000, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0x000000, 0x000000, 0x00ffff, 0x000000, 0xff007f, 0x000000, 0xff007f, 0x000000, 0x000000, 0x00ffff, 0x000000, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0xff007f, 0x000000, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x000000, 0xff007f, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xffff00, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0x000000, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0x000000, null],
+    [0x000000, 0xff007f, 0xffffff, 0xffffff, 0xff007f, 0x000000, 0xff007f, 0xff007f, 0xff007f, 0x000000, 0xff007f, 0xffffff, 0xffffff, 0xff007f, 0x000000, null],
+    [null, 0x000000, 0xffffff, 0xffffff, 0xffffff, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xff007f, 0xffffff, 0xffffff, 0xffffff, 0x000000, null, null],
+    [null, null, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, null, null, null],
+    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+];
+let isDragging = false; 
+let previousX = 0;
+let previousY = 0;
+// let mouseX = 0;
+// let mouseY = 0;
+let r = 0, g = 0, b = 0, a = 255; // Default color
+let posX = 100;
+let posY = 100;
+let degree = 0;
+let scale = 1;
+
+canvas.addEventListener('click', (event) => {
+
+});
+
+canvas.addEventListener('mousedown', (event) => {
+  isDragging = true;
+  console.log('Mouse down', event.offsetX, event.offsetY);
+});
+
+canvas.addEventListener('mouseup', (event) => {
+  isDragging = false;
+  console.log('Mouse up', event.offsetX, event.offsetY);
+});
+
+canvas.addEventListener('mousemove', (event) => {
+
+  const { x, y } = toScaledMousePos(event.clientX, event.clientY);
+  // mouseX = x;
+  // mouseY = y;
+  if(isDragging) {
+    drawLine(previousX, previousY, x, y, r, g, b); // Draw a line from previous position to current position with the current color
+    putPixel(x, y, r, g, b); // Draw a pixel at current position with the current color
+    ctx.putImageData(imageData, 0, 0);
+  }
+  previousX = x;
+  previousY = y;
+});
+
+window.addEventListener('keydown', (event) => {
+  console.log('Key down:', event.key);
+  if(event.key === '1') {
+    r = 255; g = 0; b = 0; // Change to red
+  }
+  else if(event.key === '2') {
+    r = 0; g = 255; b = 0; // Change to green
+  }
+  else if(event.key === '3') {
+    r = 0; g = 0; b = 255; // Change to blue
+  }
+  // Translation (Move)
+  else if(event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+    posX -= 5;
+  }
+  else if(event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+    posX += 5;
+  }
+  else if(event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+    posY -= 5;
+  }
+  else if(event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+    posY += 5;
+  }
+  // Rotation (Q = Counter-clockwise, E = Clockwise)
+  else if(event.key === 'q' || event.key === 'Q') {
+    degree -= 5;
+  }
+  else if(event.key === 'e' || event.key === 'E') {
+    degree += 5;
+  }
+  // Scaling
+  else if(event.key === '+' || event.key === '=') {
+    scale = Math.min(3.0, scale + 0.1);
+  }
+  else if(event.key === '-' || event.key === '_') {
+    scale = Math.max(0.3, scale - 0.1);
+  }
+});
+window.addEventListener('keyup', (event) => {
+  console.log('Key up:', event.key);
+});
+
+//drawSprite(spaceInvaderSprite, 100, 100, 0, 255, 255); // Draw a cyan space invader sprite
+//drawSpriteRotate(spaceInvaderSprite, 100, 100, 60, 0, 255, 255); // Draw a cyan space invader sprite
+//drawSpriteRotateScale(SusSprite, 100, 100, degree, scale, scale, 0, 0, 255);
+ctx.putImageData(imageData, 0, 0);
+
+function animate() {
+  drawRectFilled(0, 0, canvas.width - 1, canvas.height - 1, 255, 255, 255);
+  
+  drawSprite24Bit(catSprite24bit, posX, posY, degree, scale, scale);
+  ctx.putImageData(imageData, 0, 0);
+  requestAnimationFrame(animate);
+}
+animate();
+
+</script>
+</body>
+</html>
