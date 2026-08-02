@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimal Paint Studio - PaintWeb</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-title">Paint Studio</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn-clear" onclick="clearCanvas()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+          </svg>
+          ล้างกระดาน
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      
+      <!-- Toolbar Sidebar -->
+      <aside class="sidebar">
+        
+        <div class="section-group">
+          <span class="section-title">เครื่องมือ</span>
+          <div class="tools-grid">
+            <button id="btnPencil" class="tool-btn active" onclick="setTool('pencil')" title="ดินสอ">
+              <span class="tool-icon">✏️</span>
+              <span class="tool-label">ดินสอ</span>
+            </button>
+            <button id="btnLine" class="tool-btn" onclick="setTool('line')" title="เส้นตรง">
+              <span class="tool-icon">📏</span>
+              <span class="tool-label">เส้นตรง</span>
+            </button>
+            <button id="btnRect" class="tool-btn" onclick="setTool('rectangle')" title="สี่เหลี่ยม">
+              <span class="tool-icon">⬜</span>
+              <span class="tool-label">สี่เหลี่ยม</span>
+            </button>
+            <button id="btnEllipse" class="tool-btn" onclick="setTool('ellipse')" title="วงรี">
+              <span class="tool-icon">⭕</span>
+              <span class="tool-label">วงรี</span>
+            </button>
+            <button id="btnEraser" class="tool-btn" onclick="setTool('eraser')" title="ยางลบ">
+              <span class="tool-icon">🧹</span>
+              <span class="tool-label">ยางลบ</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Shape Fill Option -->
+        <div class="section-group">
+          <span class="section-title">ตัวเลือกรูปทรง</span>
+          <label class="toggle-option">
+            <input type="checkbox" id="fillShape">
+            <span class="toggle-custom"></span>
+            <span class="toggle-text">ถมสีทึบ (Fill)</span>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Brush Size -->
+        <div class="section-group">
+          <span class="section-title">ระบุความหนาเส้น</span>
+          <div class="size-input-wrapper">
+            <input type="number" id="brushSizeInput" min="1" max="50" value="2" class="size-num-input-large" oninput="updateBrushSize(this.value)">
+            <span class="size-unit-label">px</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- RGB Color Inputs -->
+        <div class="section-group">
+          <span class="section-title">ระบุค่าสี (RGB: 0-255)</span>
+          
+          <div class="rgb-input-wrapper">
+            <div id="colorPreview" class="color-preview-box" style="background-color: rgb(0, 0, 0);"></div>
+            <div class="rgb-inputs">
+              <div class="rgb-field">
+                <label for="colorR">R</label>
+                <input type="number" id="colorR" min="0" max="255" value="0" oninput="updateRgbColor()">
+              </div>
+              <div class="rgb-field">
+                <label for="colorG">G</label>
+                <input type="number" id="colorG" min="0" max="255" value="0" oninput="updateRgbColor()">
+              </div>
+              <div class="rgb-field">
+                <label for="colorB">B</label>
+                <input type="number" id="colorB" min="0" max="255" value="0" oninput="updateRgbColor()">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Palette Swatches -->
+          <div class="palette-grid">
+            <div class="swatch" style="background:rgb(0,0,0);" onclick="selectRgbPreset(0,0,0)" title="ดำ"></div>
+            <div class="swatch" style="background:rgb(51,51,51);" onclick="selectRgbPreset(51,51,51)" title="เทาเข้ม"></div>
+            <div class="swatch" style="background:rgb(128,128,128);" onclick="selectRgbPreset(128,128,128)" title="เทา"></div>
+            <div class="swatch" style="background:rgb(204,204,204);" onclick="selectRgbPreset(204,204,204)" title="เทาอ่อน"></div>
+            <div class="swatch" style="background:rgb(255,255,255);" onclick="selectRgbPreset(255,255,255)" title="ขาว"></div>
+            <div class="swatch" style="background:rgb(255,59,48);" onclick="selectRgbPreset(255,59,48)" title="แดง"></div>
+            <div class="swatch" style="background:rgb(52,199,89);" onclick="selectRgbPreset(52,199,89)" title="เขียว"></div>
+            <div class="swatch" style="background:rgb(0,122,255);" onclick="selectRgbPreset(0,122,255)" title="น้ำเงิน"></div>
+            <div class="swatch" style="background:rgb(255,204,0);" onclick="selectRgbPreset(255,204,0)" title="เหลือง"></div>
+            <div class="swatch" style="background:rgb(255,149,0);" onclick="selectRgbPreset(255,149,0)" title="ส้ม"></div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Canvas Stage -->
+      <section class="canvas-stage">
+        <div class="canvas-frame">
+          <canvas id="canvas" width="200" height="200"></canvas>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Status Bar -->
+    <footer class="app-status">
+      <div class="status-item" id="statusPos">ตำแหน่ง: X: --, Y: --</div>
+      <div class="status-item" id="statusTool">เครื่องมือ: ดินสอ</div>
+      <div class="status-item" id="statusSize">ความหนา: 2px</div>
+      <div class="status-item" id="statusCanvasSize">Canvas: 200x200</div>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
