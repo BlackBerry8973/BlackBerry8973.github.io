@@ -18,6 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/EXRLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.19"></script>
 
     <script>
 
@@ -40,14 +41,33 @@
         camera.lookAt(0, 0, 0);
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-        const abmientLight = new THREE.AmbientLight(0x404040, 1); // soft white light
+        const abmientLight = new THREE.AmbientLight(0x484848, 1); // soft white light
         scene.add(abmientLight);
 
-        
-        const directionalLight = new THREE.DirectionalLight(0xFD5E53, 1); // sunlight
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // sunlight
         directionalLight.position.set(10, 10, 10);
         directionalLight.castShadow = true;
         scene.add(directionalLight);
+
+        // --- Light Controls GUI ---
+        const GUI = lil.GUI;
+        const gui = new GUI({ title: 'Light Controls' });
+
+        // Ambient Light Folder
+        const ambientFolder = gui.addFolder('Ambient Light');
+        ambientFolder.add(abmientLight, 'intensity', 0, 5, 0.01).name('Intensity');
+        ambientFolder.addColor(abmientLight, 'color').name('Color');
+
+        // Directional Light Folder
+        const dirLightFolder = gui.addFolder('Directional Light');
+        dirLightFolder.add(directionalLight, 'intensity', 0, 5, 0.01).name('Intensity');
+        dirLightFolder.addColor(directionalLight, 'color').name('Color');
+
+        // Directional Light Position Folder
+        const posFolder = dirLightFolder.addFolder('Position');
+        posFolder.add(directionalLight.position, 'x', -30, 30, 0.5).name('x');
+        posFolder.add(directionalLight.position, 'y', -30, 30, 0.5).name('y');
+        posFolder.add(directionalLight.position, 'z', -30, 30, 0.5).name('z');
 
 
         
