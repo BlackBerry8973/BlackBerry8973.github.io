@@ -3,26 +3,101 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D Bus Stop - Night Scene</title>
+  <title>3D Bus Stop - Interactive Night Scene</title>
   <style>
     html, body {
       height: 100%;
       margin: 0;
       overflow: hidden;
       background-color: #080a10;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
     }
     canvas {
       display: block;
       width: 100%;
       height: 100%;
     }
+
+    .ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .hint-badge {
+      background: rgba(16, 22, 34, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+
+    .bottom-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .reset-btn {
+      pointer-events: auto;
+      background: rgba(13, 17, 26, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+      color: #f1f5f9;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 500;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reset-btn.active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .reset-btn:hover {
+      background: rgba(37, 99, 235, 0.9);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
   </style>
+
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
 <body>
+
+<div class="ui-layer">
+  <div class="top-bar">
+    <div class="hint-badge">💡 คลิกที่วัตถุเพื่อซูมเข้า / คลิกที่ว่างเพื่อซูมออก</div>
+  </div>
+
+  <div class="bottom-bar">
+    <button id="resetCamBtn" class="reset-btn">↺ มุมมองเดิม</button>
+  </div>
+</div>
 
 <script>
   const scene = new THREE.Scene();
@@ -49,7 +124,7 @@
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
   controls.maxPolarAngle = Math.PI / 2 - 0.01;
-  controls.minDistance = 2;
+  controls.minDistance = 1.0;
   controls.maxDistance = 25;
 
   const ambientLight = new THREE.AmbientLight(0x23334d, 0.2);
@@ -99,6 +174,11 @@
   ground.receiveShadow = true;
   scene.add(ground);
 
+  let defaultCamPos = new THREE.Vector3();
+  let defaultTarget = new THREE.Vector3();
+  let isZoomed = false;
+  const interactiveMeshes = [];
+
   const loader = new THREE.GLTFLoader();
   const modelUrl = 'https://raw.githubusercontent.com/BlackBerry8973/BlackBerry8973.github.io/main/3DModels/3D.glb';
 
@@ -118,6 +198,7 @@
         if (child.material) {
           child.material.shadowSide = THREE.DoubleSide;
         }
+        interactiveMeshes.push(child);
       }
     });
 
@@ -144,10 +225,180 @@
     roofSpot.target.position.set(depth * 0.4, size.y * 0.4, 0);
     warmBounce.position.set(0, size.y * 0.75, 0);
 
-    camera.position.set(-width * 1.15, size.y * 0.85, width * 0.95);
-    controls.target.set(0, size.y * 0.45, 0);
+    defaultCamPos.set(-width * 1.15, size.y * 0.85, width * 0.95);
+    defaultTarget.set(0, size.y * 0.45, 0);
+
+    camera.position.copy(defaultCamPos);
+    controls.target.copy(defaultTarget);
     controls.update();
   });
+
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  let pointerDownPos = { x: 0, y: 0 };
+
+  const resetCamBtn = document.getElementById('resetCamBtn');
+
+  window.addEventListener('pointerdown', (e) => {
+    pointerDownPos.x = e.clientX;
+    pointerDownPos.y = e.clientY;
+  });
+
+  window.addEventListener('pointerup', (e) => {
+    if (e.target.closest('.ui-layer') && !e.target.matches('canvas')) return;
+
+    const diffX = Math.abs(e.clientX - pointerDownPos.x);
+    const diffY = Math.abs(e.clientY - pointerDownPos.y);
+    if (diffX > 5 || diffY > 5) return;
+
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(interactiveMeshes, true);
+
+    if (intersects.length > 0) {
+      const hit = intersects[0];
+      const clickedMesh = hit.object;
+      const hitPoint = hit.point;
+      const normal = hit.face ? hit.face.normal.clone().applyQuaternion(clickedMesh.getWorldQuaternion(new THREE.Quaternion())) : new THREE.Vector3(0, 0, 1);
+
+      const zoomDistance = 8;
+      const targetCam = hitPoint.clone().add(normal.multiplyScalar(zoomDistance));
+
+      resetCamBtn.classList.add('active');
+      isZoomed = true;
+
+      gsap.killTweensOf(camera.position);
+      gsap.killTweensOf(controls.target);
+
+      gsap.to(camera.position, {
+        x: targetCam.x,
+        y: Math.max(targetCam.y, 0.5),
+        z: targetCam.z,
+        duration: 1.2,
+        ease: "power2.inOut"
+      });
+
+      gsap.to(controls.target, {
+        x: hitPoint.x,
+        y: hitPoint.y,
+        z: hitPoint.z,
+        duration: 1.2,
+        ease: "power2.inOut"
+      });
+    } else {
+      if (isZoomed) resetCamera();
+    }
+  });
+
+  function resetCamera() {
+    isZoomed = false;
+    resetCamBtn.classList.remove('active');
+
+    gsap.killTweensOf(camera.position);
+    gsap.killTweensOf(controls.target);
+
+    gsap.to(camera.position, {
+      x: defaultCamPos.x,
+      y: defaultCamPos.y,
+      z: defaultCamPos.z,
+      duration: 1.2,
+      ease: "power2.inOut"
+    });
+
+    gsap.to(controls.target, {
+      x: defaultTarget.x,
+      y: defaultTarget.y,
+      z: defaultTarget.z,
+      duration: 1.2,
+      ease: "power2.inOut"
+    });
+  }
+
+  resetCamBtn.addEventListener('click', resetCamera);
+
+  let audioCtx = null;
+  let windGain = null;
+  let cricketInterval = null;
+
+  function initNightAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const bufferSize = audioCtx.sampleRate * 2;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      output[i] = (lastOut + 0.02 * white) / 1.02;
+      lastOut = output[i];
+      output[i] *= 3.5;
+    }
+
+    const whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+    whiteNoise.loop = true;
+
+    const windFilter = audioCtx.createBiquadFilter();
+    windFilter.type = 'lowpass';
+    windFilter.frequency.setValueAtTime(320, audioCtx.currentTime);
+
+    windGain = audioCtx.createGain();
+    windGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+    whiteNoise.connect(windFilter);
+    windFilter.connect(windGain);
+    windGain.connect(audioCtx.destination);
+    whiteNoise.start();
+
+    function playCricketChirp() {
+      if (!audioCtx || audioCtx.state !== 'running') return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(4600 + Math.random() * 300, now);
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(4700, now);
+      filter.Q.setValueAtTime(8, now);
+
+      gain.gain.setValueAtTime(0.001, now);
+      for (let i = 0; i < 3; i++) {
+        const t = now + i * 0.045;
+        gain.gain.setValueAtTime(0.025, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+      }
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.16);
+    }
+
+    cricketInterval = setInterval(() => {
+      if (Math.random() > 0.35) playCricketChirp();
+    }, 900);
+  }
+
+  function startAudioAlways() {
+    if (!audioCtx) {
+      initNightAudio();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  startAudioAlways();
+  window.addEventListener('pointerdown', startAudioAlways, { passive: true });
+  window.addEventListener('keydown', startAudioAlways, { passive: true });
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
